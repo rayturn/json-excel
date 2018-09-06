@@ -29,6 +29,7 @@ SOFTWARE.
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using OfficeOpenXml;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -62,7 +63,7 @@ namespace JsonExcel
                 force = true;
             else
                 dest = args[2];
-            if (args.Length > 2 && args[3] == "force") force = true;
+            if (args.Length > 3 && args[3] == "force") force = true;
 
             if (File.Exists(source))
                 ConvertFile(source, dest, force);
@@ -74,7 +75,7 @@ namespace JsonExcel
 
         static void ConvertDirectory(string source,string destination,bool force)
         {
-            string[] sourceFiles = Directory.GetFiles(source, toJson ? "(*.txt|*.json)" : "*.xlsx", SearchOption.AllDirectories);
+            string[] sourceFiles = Directory.GetFiles(source,"*", SearchOption.AllDirectories).Where(f => toJson ? f.EndsWith(".xlsx") : (f.EndsWith(".txt") || f.EndsWith(".txt"))).ToArray(); ;
             foreach (string file in sourceFiles)
             {
                 string target = file;
@@ -96,14 +97,14 @@ namespace JsonExcel
                 destination = destination.Replace(".json", ".xlsx");
             }
 
-            if (!force && File.Exists(destination))return;
+            if (!toJson && !force && File.Exists(destination))return;
 
             try
             {
                 if (toJson)
-                    JsonToXlsx(source, destination);
-                else
                     XlsxToJson(source, destination);
+                else
+                    JsonToXlsx(source, destination);
 
                 Console.WriteLine(destination + " [OK]");
             }
